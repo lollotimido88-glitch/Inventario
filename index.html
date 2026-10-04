@@ -1,1 +1,1071 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestione Inventario</title>
 
+  <!-- Meta tag per iOS Web App a tutto schermo -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+
+  <!-- Icona personalizzata per la Schermata Home -->
+  <link rel="apple-touch-icon" href="https://img.icons8.com/color/180/box--v1.png">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: #f3f4f6;
+      color: #1f2937;
+      padding: 12px;
+      padding-bottom: 76px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background-color: #ffffff;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-around;
+      padding: 8px 0;
+      z-index: 100;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+    }
+
+    .nav-item {
+      background: transparent;
+      border: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      color: #6b7280;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+      flex: 1;
+      padding: 4px;
+    }
+
+    .nav-item.active {
+      color: #2563eb;
+    }
+
+    .nav-item svg {
+      width: 24px;
+      height: 24px;
+      fill: currentColor;
+      margin-bottom: 2px;
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      color: #111827;
+    }
+
+    .search-container {
+      position: relative;
+      display: block;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 12px 40px 12px 16px;
+      font-size: 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 10px;
+      outline: none;
+      background-color: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .search-box:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 22px;
+      cursor: pointer;
+      color: #9ca3af;
+      padding: 0;
+      display: none;
+      line-height: 1;
+    }
+
+    .clear-btn:hover {
+      color: #374151;
+    }
+
+    .counter {
+      margin-top: 6px;
+      font-size: 0.85rem;
+      color: #6b7280;
+    }
+
+    .card-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .card {
+      background-color: #ffffff;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      border: 1px solid #e5e7eb;
+    }
+
+    .card-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      border-bottom: 1px solid #f3f4f6;
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: none;
+      border-radius: 8px;
+      width: 36px;
+      height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #4b5563;
+      transition: background-color 0.2s, color 0.2s;
+    }
+
+    .btn-icon:hover {
+      background-color: #f3f4f6;
+      color: #111827;
+    }
+
+    .btn-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: currentColor;
+    }
+
+    .btn-delete:hover {
+      color: #dc2626;
+    }
+
+    .card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .col-left, .col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .info-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2px;
+    }
+
+    .label {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+      font-weight: 600;
+    }
+
+    .btn-add-spezzone {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #2563eb;
+      border-radius: 4px;
+      width: 20px;
+      height: 20px;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .code-value {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #2563eb;
+      word-break: break-word;
+    }
+
+    .reparto-value {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #047857;
+      word-break: break-word;
+    }
+
+    .spezzoni-value {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #10b981;
+      word-break: break-word;
+    }
+
+    .bottom-left-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 6px;
+      align-items: center;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      background-color: #eff6ff;
+      color: #1d4ed8;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .edit-input {
+      width: 100%;
+      padding: 6px 8px;
+      font-size: 0.95rem;
+      border: 1px solid #2563eb;
+      border-radius: 6px;
+      background-color: #fff;
+      outline: none;
+      margin-bottom: 4px;
+    }
+
+    .edit-input.code-input {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #2563eb;
+    }
+
+    .edit-input.reparto-input {
+      font-weight: 600;
+      color: #047857;
+    }
+
+    .edit-footer {
+      display: none;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #f3f4f6;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    .edit-footer.active {
+      display: flex;
+    }
+
+    .btn-save-inline {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .no-results {
+      text-align: center;
+      padding: 32px 16px;
+      color: #6b7280;
+      font-size: 1rem;
+    }
+
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #374151;
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+
+    .history-item, .reparto-card {
+      background: #ffffff;
+      padding: 12px 16px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #1f2937;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TAB 1: HOME -->
+  <div id="tab-home" class="tab-content active">
+    <h1>Home</h1>
+    <div class="search-container">
+      <input type="text" id="homeSearchInput" class="search-box" placeholder="Cerca rapidamente..." oninput="handleHomeSearch(event)">
+      <button type="button" id="homeClearBtn" class="clear-btn">&times;</button>
+    </div>
+    
+    <div class="section-title">Ultime materie cercate o aggiunte</div>
+    <div id="historyContainer"></div>
+  </div>
+
+  <!-- TAB 2: INVENTARIO -->
+  <div id="tab-inventario" class="tab-content">
+    <h1>Inventario Materiali</h1>
+    <div class="search-container">
+      <input type="text" id="searchInput" class="search-box" placeholder="Cerca per codice, nome, reparto..." oninput="filterData()">
+      <button type="button" id="inventoryClearBtn" class="clear-btn">&times;</button>
+    </div>
+    <div id="counter" class="counter">Mostrati: 0 elementi</div>
+    <div id="cardContainer" class="card-list"></div>
+  </div>
+
+  <!-- TAB 3: REPARTI -->
+  <div id="tab-reparti" class="tab-content">
+    <h1>Elenco Reparti</h1>
+    <div id="repartiContainer" style="margin-top: 12px;"></div>
+  </div>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('home', this)">
+      <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+      Home
+    </button>
+    <button class="nav-item" onclick="switchTab('inventario', this)">
+      <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0-2-.9-2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+      Inventario
+    </button>
+    <button class="nav-item" onclick="switchTab('reparti', this)">
+      <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/></svg>
+      Reparti
+    </button>
+  </nav>
+
+  <script>
+    let parte1 = [
+      { "id": 1, "nuovocod": "490037BS", "cod": "0007", "descrizione": "DESMODUR L 75 / LAQUIN SEAL", "reparto": "REP 81", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 2, "nuovocod": "400433", "cod": "0006", "descrizione": "DESMOPHEN 800", "reparto": "REP 58", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 3, "nuovocod": "1721565", "cod": "0008", "descrizione": "ADDOCAT 10/9 L", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 4, "nuovocod": "0956591", "cod": "0010", "descrizione": "COBALTO OTTOATO 12%X", "reparto": "REP 81", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Cariche" },
+      { "id": 5, "nuovocod": "6220080SD", "cod": "0011", "descrizione": "TALCO 1 N-M 20 SACCHI", "reparto": "REP 62", "zona": "F2", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 6, "nuovocod": "4957062", "cod": "0021", "descrizione": "RESINA ZR 119", "reparto": "REP 61", "zona": "F2", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Resina" },
+      { "id": 7, "nuovocod": "4734172", "cod": "0026", "descrizione": "NEOLITH 125 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 8, "nuovocod": "4025012", "cod": "0028", "descrizione": "SYNTEV 9075X (EX 9075 XA)", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 9, "nuovocod": "0492092", "cod": "0029", "descrizione": "SOLVENTE ACE", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Solvente" },
+      { "id": 10, "nuovocod": "0103016", "cod": "0036", "descrizione": "ΕΡΤΑΝΟ", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "CISTERN. FUSTO", "tipologia": "Solvente" },
+      { "id": 11, "nuovocod": "469223", "cod": "0047", "descrizione": "CAB 381/01", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 12, "nuovocod": "4915052", "cod": "0055", "descrizione": "OLIO SILICONE PL", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 13, "nuovocod": "8450422", "cod": "0061", "descrizione": "MARRONE OSSIDO SC711", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "SACCO", "tipologia": "Pigmento" },
+      { "id": 14, "nuovocod": "3220748", "cod": "0062", "descrizione": "GOMMALACCA SALEC EXTRA", "reparto": "REP 124 CAM FREDDA", "zona": "", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 15, "nuovocod": "491038", "cod": "0068", "descrizione": "OLIO SILICONE OL 17", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 16, "nuovocod": "204678", "cod": "0079", "descrizione": "ACIDO PARATOLUENSOLFONIC", "reparto": "REP 124 CAM FREDDA", "zona": "", "spezzoni": [], "imballo": "SACCO", "tipologia": "Acido" },
+      { "id": 17, "nuovocod": "4004083", "cod": "0083", "descrizione": "DESMOPHEN 1200 ITALKID 312 ITALESTER 312", "reparto": "REP 68", "zona": "ZONA A", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 18, "nuovocod": "3418052", "cod": "0085", "descrizione": "URAGUM RM 77", "reparto": "REP 61", "zona": "F2", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 19, "nuovocod": "0220365", "cod": "0088", "descrizione": "ONDINA 919 (SOLUZ. 7190)", "reparto": "REP 68", "zona": "ZONA A", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 20, "nuovocod": "0445336", "cod": "0090", "descrizione": "OLIO DIPINO", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Solvente" },
+      { "id": 21, "nuovocod": "0405094", "cod": "0094", "descrizione": "ALCOOL ETILICO 94%", "reparto": "REP 68", "zona": "TETTOIA", "spezzoni": [], "imballo": "AZZINI cist.", "tipologia": "Solvente" },
+      { "id": 22, "nuovocod": "086411", "cod": "0104", "descrizione": "OTTOATO ZINCO 8%", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 23, "nuovocod": "601202", "cod": "0108", "descrizione": "SYLOID ED 30", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 24, "nuovocod": "512012", "cod": "0110", "descrizione": "ACQUA DISTILLATA", "reparto": "", "zona": "", "spezzoni": [], "imballo": "", "tipologia": "Solvente" },
+      { "id": 25, "nuovocod": "472317", "cod": "0116", "descrizione": "ACRONAL 700 L", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 26, "nuovocod": "621000", "cod": "0117", "descrizione": "BENTONE 34", "reparto": "REP 121", "zona": "sottoribalta", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 27, "nuovocod": "4542052", "cod": "0119", "descrizione": "CERA AM 3", "reparto": "REP 121", "zona": "sottoribalta", "spezzoni": [], "imballo": "SACCO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 28, "nuovocod": "3601544", "cod": "0296", "descrizione": "SYN P3 GA707/SIR FS0962LD", "reparto": "MAG. SPED", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 29, "nuovocod": "601920", "cod": "0307", "descrizione": "AEROSIL 200", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 30, "nuovocod": "590010", "cod": "0317", "descrizione": "AMMONIACA", "reparto": "REP 86", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 31, "nuovocod": "195010", "cod": "0136", "descrizione": "METILETILCHETOSSIMA", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 32, "nuovocod": "456227", "cod": "0139", "descrizione": "VINILYTE VAGH VINNOL. E. 15/48A", "reparto": "REP 121", "zona": "sottoribalta", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 33, "nuovocod": "2443032", "cod": "0320", "descrizione": "BYK 055", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 34, "nuovocod": "601482", "cod": "0140", "descrizione": "OPACIZZANTE OK 500", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 35, "nuovocod": "491820", "cod": "0322", "descrizione": "PAINT ADDITIVE PA56 DOW CORNING 56", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 36, "nuovocod": "400435", "cod": "0143", "descrizione": "DESMOPHEN 1100", "reparto": "REP 68", "zona": "ZONA A", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 37, "nuovocod": "491915", "cod": "0323", "descrizione": "PAINT ADDITIVE PA57", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 38, "nuovocod": "6729205", "cod": "0156", "descrizione": "OSSIDO ZINCO CF", "reparto": "REP 61", "zona": "F2", "spezzoni": [], "imballo": "SACCO", "tipologia": "Cariche" },
+      { "id": 39, "nuovocod": "1790493", "cod": "0325", "descrizione": "SERAD FK 321 DAPRO FK 321", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 40, "nuovocod": "0260419", "cod": "0159", "descrizione": "PARAFFINA 51/53 ISTOLOGIC", "reparto": "REP 61", "zona": "F2", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "" },
+      { "id": 41, "nuovocod": "108000", "cod": "0330", "descrizione": "IRGANOX 1010", "reparto": "REP 61", "zona": "F5", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "Additivo" },
+      { "id": 42, "nuovocod": "0260259", "cod": "0161", "descrizione": "PARAFFINA 46/48", "reparto": "REP 61", "zona": "F1", "spezzoni": [], "imballo": "BARATTOLO", "tipologia": "" },
+      { "id": 43, "nuovocod": "4904671BS", "cod": "0333", "descrizione": "POLUR OKDS / DESMODUR HL", "reparto": "MAG. SPED", "zona": "FILA M/L", "spezzoni": [], "imballo": "", "tipologia": "Resina" },
+      { "id": 44, "nuovocod": "601925", "cod": "0162", "descrizione": "AEROSIL 300", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 45, "nuovocod": "469121", "cod": "0167", "descrizione": "CAB 381/20", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 46, "nuovocod": "046210", "cod": "0170", "descrizione": "GLICERINA BIDISTILLTA 30", "reparto": "REP 33", "zona": "RESINA", "spezzoni": [], "imballo": "CISTERNETTA", "tipologia": "Monomero" },
+      { "id": 47, "nuovocod": "4917022", "cod": "0172", "descrizione": "INDURITORE 3000", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 48, "nuovocod": "495231", "cod": "0182", "descrizione": "DISPERBYK", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 49, "nuovocod": "621721", "cod": "0183", "descrizione": "BENTONE 27", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 50, "nuovocod": "180011", "cod": "0196", "descrizione": "DIMETILFORMAMMIDE", "reparto": "REP 81", "zona": "F3 / F4", "spezzoni": [], "imballo": "CISTERN. FUSTO", "tipologia": "Solvente" },
+      { "id": 51, "nuovocod": "491611", "cod": "0406", "descrizione": "FLUIDO 200/100", "reparto": "REP 61", "zona": "F2", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 52, "nuovocod": "6632033", "cod": "0407", "descrizione": "BIANCO LUC.0022", "reparto": "REP 61", "zona": "F5", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Pigmento" },
+      { "id": 53, "nuovocod": "7713173", "cod": "0410", "descrizione": "TINT-AYD UL 2012", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Pigmento" },
+      { "id": 54, "nuovocod": "474534", "cod": "0411", "descrizione": "BYK 354", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 55, "nuovocod": "042911", "cod": "0416", "descrizione": "ETILDIGLICOLE", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 56, "nuovocod": "469122", "cod": "0419", "descrizione": "CAB 381/09", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Resina" },
+      { "id": 57, "nuovocod": "091610", "cod": "0421", "descrizione": "NUODEX ZIRCONIO 6%", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 58, "nuovocod": "601928", "cod": "0425", "descrizione": "AEROSIL 380", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 59, "nuovocod": "056741", "cod": "0426", "descrizione": "IRGACURE 184 SPEEDCURE 84", "reparto": "REP 61", "zona": "", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "Additivo" },
+      { "id": 60, "nuovocod": "4604032", "cod": "0430", "descrizione": "NITRO NORMA 34/E 20% ESO", "reparto": "REP. 89", "zona": "NITRO", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 61, "nuovocod": "4907562", "cod": "0434", "descrizione": "UCOPOL OLW41 55%", "reparto": "", "zona": "STOCK", "spezzoni": [], "imballo": "", "tipologia": "Resina" },
+      { "id": 62, "nuovocod": "3961042", "cod": "0442", "descrizione": "RESINA A2 60%RM", "reparto": "", "zona": "", "spezzoni": [], "imballo": "", "tipologia": "Resina" },
+      { "id": 63, "nuovocod": "491010", "cod": "0444", "descrizione": "TEGOGLIDE 410", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 64, "nuovocod": "106100", "cod": "0501", "descrizione": "IDROCHINONE", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 65, "nuovocod": "601486", "cod": "0510", "descrizione": "OPACIZZANTE OK 520", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 66, "nuovocod": "014002", "cod": "0511", "descrizione": "EXXSOL D 40 PURO", "reparto": "REP 92", "zona": "STOCK", "spezzoni": [], "imballo": "", "tipologia": "" },
+      { "id": 67, "nuovocod": "4540783", "cod": "0512", "descrizione": "CERA LUBAPRINT T.152", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 68, "nuovocod": "1378023", "cod": "0516", "descrizione": "ANTIBLAZE V6/V66", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Additivo" },
+      { "id": 69, "nuovocod": "360233", "cod": "0518", "descrizione": "ROSK E70/POLIGAR 462", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 70, "nuovocod": "490344", "cod": "0519", "descrizione": "ADDITIVO T.I.", "reparto": "REP 81", "zona": "STOCK", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 71, "nuovocod": "4919042", "cod": "0534", "descrizione": "EFKA 2022", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 72, "nuovocod": "360915", "cod": "0535", "descrizione": "SYNTEVEN 704/ROSK 502 AB", "reparto": "REP 81", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 73, "nuovocod": "2401143", "cod": "0548", "descrizione": "LAVANDA CP 0132 A", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "LATTINA", "tipologia": "Additivo" },
+      { "id": 74, "nuovocod": "3015271", "cod": "0550", "descrizione": "KOROLIT B 4583", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "LATTA", "tipologia": "Additivo" },
+      { "id": 75, "nuovocod": "4915073", "cod": "0551", "descrizione": "EFKA 3883", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 76, "nuovocod": "2430574", "cod": "0553", "descrizione": "EFKA 5066", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 77, "nuovocod": "0403274", "cod": "0645", "descrizione": "ALCOOL ETILICO 99%", "reparto": "", "zona": "", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 78, "nuovocod": "0220347", "cod": "0646", "descrizione": "BEVALOID 2541 CALCIO DF 2541", "reparto": "REP 61", "zona": "F1", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Additivo" },
+      { "id": 79, "nuovocod": "056124", "cod": "0648", "descrizione": "BENZOPHENONE", "reparto": "REP 86", "zona": "KOPRON", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "" },
+      { "id": 80, "nuovocod": "1269051", "cod": "0653", "descrizione": "EBECRYL 350", "reparto": "REP 81", "zona": "F6", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "" },
+      { "id": 81, "nuovocod": "043310", "cod": "0654", "descrizione": "BUTILDIGLICOLE", "reparto": "REP 121", "zona": "sottoribalta", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 82, "nuovocod": "056130", "cod": "0655", "descrizione": "DAROCUR 1173", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Resina" },
+      { "id": 83, "nuovocod": "4756056", "cod": "0656", "descrizione": "NEOCRYL XK 36", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Resina" },
+      { "id": 84, "nuovocod": "1265092", "cod": "0659", "descrizione": "EBECRYL 1608", "reparto": "REP 81", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 85, "nuovocod": "1266032", "cod": "0663", "descrizione": "EBECRYL 210", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 86, "nuovocod": "620323SD", "cod": "0666", "descrizione": "ASP 170", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Cariche" },
+      { "id": 87, "nuovocod": "045731", "cod": "0667", "descrizione": "SURFYNOL 104 E", "reparto": "REP 61", "zona": "JOLLY", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Additivo" },
+      { "id": 88, "nuovocod": "4910226", "cod": "0668", "descrizione": "ANTIGRAFFIO K854", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 89, "nuovocod": "143112", "cod": "0669", "descrizione": "TEXANOL", "reparto": "REP 61", "zona": "ZONA C", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 90, "nuovocod": "244805", "cod": "0670", "descrizione": "SOLSPERSE 5000", "reparto": "", "zona": "", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "Additivo" },
+      { "id": 91, "nuovocod": "043014", "cod": "0672", "descrizione": "ETOSSIPROPANOLO", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Solvente" },
+      { "id": 92, "nuovocod": "495115", "cod": "0673", "descrizione": "EFKA 2720", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 93, "nuovocod": "6202866", "cod": "0675", "descrizione": "POLESTAR 200 P", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Cariche" },
+      { "id": 94, "nuovocod": "122735", "cod": "0676", "descrizione": "TMPEOTA - EBECRYL 160", "reparto": "REP 92 / REP 20", "zona": "F0", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "" },
+      { "id": 95, "nuovocod": "172013", "cod": "0678", "descrizione": "DIMETILETANOLAMMINA", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 96, "nuovocod": "454745", "cod": "0684", "descrizione": "TEXTURE 5382 W", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "SCAT. E FUSTO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 97, "nuovocod": "454422", "cod": "0685", "descrizione": "TEXTURE POLYFINE UF", "reparto": "REP 61", "zona": "F5", "spezzoni": [], "imballo": "SCAT. E FUSTO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 98, "nuovocod": "1716026", "cod": "0686", "descrizione": "EBECRYL P 115 - ETERCURE", "reparto": "REP 81", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 99, "nuovocod": "491580", "cod": "0689", "descrizione": "TEGOWET KL 245", "reparto": "REP 61", "zona": "F0", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Additivo" },
+      { "id": 100, "nuovocod": "455135", "cod": "0690", "descrizione": "AQUACER 513", "reparto": "REP 61", "zona": "Poxy 2", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Opacizzanti e Cere" },
+      { "id": 101, "nuovocod": "1716035", "cod": "0691", "descrizione": "ETERCURE F 35", "reparto": "REP 81", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 102, "nuovocod": "1261051", "cod": "0694", "descrizione": "EBECRYL 600", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 103, "nuovocod": "1261061", "cod": "0695", "descrizione": "EBECRYL 605", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 104, "nuovocod": "495117", "cod": "0698", "descrizione": "EFKA 2721", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 105, "nuovocod": "056127", "cod": "0701", "descrizione": "IRGACURE 819", "reparto": "REP 61", "zona": "", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "Additivo" },
+      { "id": 106, "nuovocod": "1717013", "cod": "0706", "descrizione": "EBECRYL P 116", "reparto": "REP 81", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "" },
+      { "id": 107, "nuovocod": "601930", "cod": "0711", "descrizione": "AEROSIL R 972", "reparto": "REP 62", "zona": "RIBALTA", "spezzoni": [], "imballo": "SACCO", "tipologia": "Additivo" },
+      { "id": 108, "nuovocod": "495119", "cod": "0713", "descrizione": "EFKA 2722", "reparto": "REP 81", "zona": "F0", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 109, "nuovocod": "4733056", "cod": "0716", "descrizione": "NEOCRYL XK 12", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Resina" },
+      { "id": 110, "nuovocod": "0404092", "cod": "0719", "descrizione": "ALCOOL ISOPROPILICO", "reparto": "REP 68", "zona": "TETTOIA", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" }
+    ];
+
+    let parte2 = [
+      { "id": 111, "nuovocod": "4917025", "cod": "0720", "descrizione": "INDURITORE 5000", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 112, "nuovocod": "042912", "cod": "0723", "descrizione": "METILDIGLICOLE", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 113, "nuovocod": "4756057", "cod": "0724", "descrizione": "NEOCRYL XK 90", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Resina" },
+      { "id": 114, "nuovocod": "1261501", "cod": "0725", "descrizione": "EBECRYL 220", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 115, "nuovocod": "172014", "cod": "0726", "descrizione": "MONOETANOLAMMINA", "reparto": "REP 81", "zona": "F5", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 116, "nuovocod": "043015", "cod": "0730", "descrizione": "METOSSIPROPANOLO", "reparto": "REP 81", "zona": "F3", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 117, "nuovocod": "0220371", "cod": "0734", "descrizione": "SHELLSOL A", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 118, "nuovocod": "4919055", "cod": "0736", "descrizione": "EFKA 3034", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 119, "nuovocod": "4915076", "cod": "0737", "descrizione": "EFKA 3888", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 120, "nuovocod": "4919056", "cod": "0738", "descrizione": "EFKA 3037", "reparto": "REP 81", "zona": "F1", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 121, "nuovocod": "042611", "cod": "0739", "descrizione": "ACETATO DI BUTILE", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 122, "nuovocod": "4734185", "cod": "0743", "descrizione": "NEOLITH 145 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 123, "nuovocod": "042610", "cod": "0744", "descrizione": "ACETATO DI ETILE", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 124, "nuovocod": "495015", "cod": "0748", "descrizione": "DISPERBYK 161", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 125, "nuovocod": "495016", "cod": "0749", "descrizione": "DISPERBYK 162", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 126, "nuovocod": "495018", "cod": "0751", "descrizione": "DISPERBYK 164", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 127, "nuovocod": "491825", "cod": "0757", "descrizione": "TEGOMER H O 6211", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 128, "nuovocod": "495027", "cod": "0763", "descrizione": "DISPERBYK 180", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 129, "nuovocod": "0220372", "cod": "0765", "descrizione": "SOLVESSO 150", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 130, "nuovocod": "4917052", "cod": "0768", "descrizione": "URAMEX 3426", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 131, "nuovocod": "056742", "cod": "0770", "descrizione": "LUCIRIN TPO", "reparto": "REP 61", "zona": "", "spezzoni": [], "imballo": "SCATOLA", "tipologia": "Additivo" },
+      { "id": 132, "nuovocod": "1261071", "cod": "0771", "descrizione": "EBECRYL 230", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 133, "nuovocod": "495029", "cod": "0772", "descrizione": "DISPERBYK 184", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 134, "nuovocod": "1261201", "cod": "0773", "descrizione": "EBECRYL 270", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 135, "nuovocod": "495031", "cod": "0774", "descrizione": "DISPERBYK 190", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 136, "nuovocod": "495034", "cod": "0776", "descrizione": "DISPERBYK 2010", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 137, "nuovocod": "1261251", "cod": "0777", "descrizione": "EBECRYL 830", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 138, "nuovocod": "495035", "cod": "0778", "descrizione": "DISPERBYK 2000", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 139, "nuovocod": "1261401", "cod": "0779", "descrizione": "EBECRYL 870", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 140, "nuovocod": "4917032", "cod": "0780", "descrizione": "URAMEX 3425", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 141, "nuovocod": "491039", "cod": "0781", "descrizione": "ADDITIVO OL 44", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTINO", "tipologia": "Additivo" },
+      { "id": 142, "nuovocod": "495038", "cod": "0782", "descrizione": "DISPERBYK 2050", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 143, "nuovocod": "0220373", "cod": "0783", "descrizione": "SOLVESSO 200", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 144, "nuovocod": "495040", "cod": "0784", "descrizione": "DISPERBYK 2060", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "Additivo" },
+      { "id": 145, "nuovocod": "495041", "cod": "0785", "descrizione": "DISPERBYK 2090", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 146, "nuovocod": "0220374", "cod": "0786", "descrizione": "WHITE SPIRIT", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 147, "nuovocod": "495042", "cod": "0787", "descrizione": "DISPERBYK 2150", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 148, "nuovocod": "0220375", "cod": "0788", "descrizione": "XILOLO", "reparto": "REP 86", "zona": "STOCK", "spezzoni": [], "imballo": "CISTERN.", "tipologia": "Solvente" },
+      { "id": 149, "nuovocod": "495043", "cod": "0789", "descrizione": "DISPERBYK 2155", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 150, "nuovocod": "495044", "cod": "0790", "descrizione": "DISPERBYK 2163", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 151, "nuovocod": "1261451", "cod": "0791", "descrizione": "EBECRYL 880", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 152, "nuovocod": "495045", "cod": "0792", "descrizione": "DISPERBYK 2164", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 153, "nuovocod": "495046", "cod": "0793", "descrizione": "DISPERBYK 2200", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 154, "nuovocod": "1261551", "cod": "0794", "descrizione": "EBECRYL 4360", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 155, "nuovocod": "495048", "cod": "0795", "descrizione": "DISPERBYK 142", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 156, "nuovocod": "1261601", "cod": "0796", "descrizione": "EBECRYL 810", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 157, "nuovocod": "495049", "cod": "0797", "descrizione": "DISPERBYK 145", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 158, "nuovocod": "1261651", "cod": "0798", "descrizione": "EBECRYL 811", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 159, "nuovocod": "495050", "cod": "0799", "descrizione": "DISPERBYK 163", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 160, "nuovocod": "1261701", "cod": "0800", "descrizione": "EBECRYL 8210", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 161, "nuovocod": "495051", "cod": "0801", "descrizione": "DISPERBYK 168", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 162, "nuovocod": "1261751", "cod": "0802", "descrizione": "EBECRYL 4858", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 163, "nuovocod": "495052", "cod": "0803", "descrizione": "DISPERBYK 169", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 164, "nuovocod": "1261801", "cod": "0804", "descrizione": "EBECRYL 823", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 165, "nuovocod": "495053", "cod": "0805", "descrizione": "DISPERBYK 170", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 166, "nuovocod": "1261851", "cod": "0806", "descrizione": "EBECRYL 8413", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 167, "nuovocod": "495054", "cod": "0807", "descrizione": "DISPERBYK 171", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 168, "nuovocod": "1261901", "cod": "0808", "descrizione": "EBECRYL 8402", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 169, "nuovocod": "495055", "cod": "0809", "descrizione": "DISPERBYK 174", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 170, "nuovocod": "1261951", "cod": "0810", "descrizione": "EBECRYL 8411", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 171, "nuovocod": "495056", "cod": "0811", "descrizione": "DISPERBYK 103", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 172, "nuovocod": "1262001", "cod": "0812", "descrizione": "EBECRYL 5129", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 173, "nuovocod": "495057", "cod": "0813", "descrizione": "DISPERBYK 108", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 174, "nuovocod": "1262051", "cod": "0814", "descrizione": "EBECRYL 4396", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 175, "nuovocod": "495058", "cod": "0815", "descrizione": "DISPERBYK 110", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 176, "nuovocod": "1262101", "cod": "0816", "descrizione": "EBECRYL 1259", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 177, "nuovocod": "495059", "cod": "0817", "descrizione": "DISPERBYK 111", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 178, "nuovocod": "1262151", "cod": "0818", "descrizione": "EBECRYL 84", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 179, "nuovocod": "495060", "cod": "0819", "descrizione": "DISPERBYK 112", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 180, "nuovocod": "1262201", "cod": "0820", "descrizione": "EBECRYL 8450", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 181, "nuovocod": "495061", "cod": "0821", "descrizione": "DISPERBYK 115", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 182, "nuovocod": "1262251", "cod": "0822", "descrizione": "EBECRYL 8460", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 183, "nuovocod": "495062", "cod": "0823", "descrizione": "DISPERBYK 130", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 184, "nuovocod": "1262301", "cod": "0824", "descrizione": "EBECRYL 860", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 185, "nuovocod": "495063", "cod": "0825", "descrizione": "DISPERBYK 140", "reparto": "REP 61", "zona": "F4", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Additivo" },
+      { "id": 186, "nuovocod": "1262351", "cod": "0826", "descrizione": "EBECRYL LEO 10101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 187, "nuovocod": "4734190", "cod": "0827", "descrizione": "NEOLITH 160 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 188, "nuovocod": "1262401", "cod": "0828", "descrizione": "EBECRYL LEO 10301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 189, "nuovocod": "4734200", "cod": "0829", "descrizione": "NEOLITH 180 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 190, "nuovocod": "1262451", "cod": "0830", "descrizione": "EBECRYL LEO 10501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 191, "nuovocod": "4734210", "cod": "0831", "descrizione": "NEOLITH 200 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 192, "nuovocod": "1262501", "cod": "0832", "descrizione": "EBECRYL LEO 10701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 193, "nuovocod": "4734220", "cod": "0833", "descrizione": "NEOLITH 220 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 194, "nuovocod": "1262551", "cod": "0834", "descrizione": "EBECRYL LEO 10901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 195, "nuovocod": "4734230", "cod": "0835", "descrizione": "NEOLITH 240 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 196, "nuovocod": "1262601", "cod": "0836", "descrizione": "EBECRYL LEO 11101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 197, "nuovocod": "4734240", "cod": "0837", "descrizione": "NEOLITH 250 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 198, "nuovocod": "1262651", "cod": "0838", "descrizione": "EBECRYL LEO 11301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 199, "nuovocod": "4734250", "cod": "0839", "descrizione": "NEOLITH 260 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 200, "nuovocod": "1262701", "cod": "0840", "descrizione": "EBECRYL LEO 11501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 201, "nuovocod": "4734260", "cod": "0841", "descrizione": "NEOLITH 280 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 202, "nuovocod": "1262751", "cod": "0842", "descrizione": "EBECRYL LEO 11701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 203, "nuovocod": "4734270", "cod": "0843", "descrizione": "NEOLITH 300 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 204, "nuovocod": "1262801", "cod": "0844", "descrizione": "EBECRYL LEO 11901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 205, "nuovocod": "4734280", "cod": "0845", "descrizione": "NEOLITH 320 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 206, "nuovocod": "1262851", "cod": "0846", "descrizione": "EBECRYL LEO 12101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 207, "nuovocod": "4734290", "cod": "0847", "descrizione": "NEOLITH 350 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 208, "nuovocod": "1262901", "cod": "0848", "descrizione": "EBECRYL LEO 12301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 209, "nuovocod": "4734300", "cod": "0849", "descrizione": "NEOLITH 400 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 210, "nuovocod": "1262951", "cod": "0850", "descrizione": "EBECRYL LEO 12501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 211, "nuovocod": "4734310", "cod": "0851", "descrizione": "NEOLITH 450 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 212, "nuovocod": "1263001", "cod": "0852", "descrizione": "EBECRYL LEO 12701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 213, "nuovocod": "4734320", "cod": "0853", "descrizione": "NEOLITH 500 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 214, "nuovocod": "1263051", "cod": "0854", "descrizione": "EBECRYL LEO 12901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 215, "nuovocod": "4734330", "cod": "0855", "descrizione": "NEOLITH 550 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 216, "nuovocod": "1263101", "cod": "0856", "descrizione": "EBECRYL LEO 13101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 217, "nuovocod": "4734340", "cod": "0857", "descrizione": "NEOLITH 600 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 218, "nuovocod": "1263151", "cod": "0858", "descrizione": "EBECRYL LEO 13301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 219, "nuovocod": "4734350", "cod": "0859", "descrizione": "NEOLITH 650 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 220, "nuovocod": "1263201", "cod": "0860", "descrizione": "EBECRYL LEO 13501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" }
+    ];
+
+    let parte3 = [
+      { "id": 221, "nuovocod": "4734360", "cod": "0861", "descrizione": "NEOLITH 700 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 222, "nuovocod": "1263251", "cod": "0862", "descrizione": "EBECRYL LEO 13701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 223, "nuovocod": "4734370", "cod": "0863", "descrizione": "NEOLITH 750 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 224, "nuovocod": "1263301", "cod": "0864", "descrizione": "EBECRYL LEO 13901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 225, "nuovocod": "4734380", "cod": "0865", "descrizione": "NEOLITH 800 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 226, "nuovocod": "1263351", "cod": "0866", "descrizione": "EBECRYL LEO 14101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 227, "nuovocod": "4734390", "cod": "0867", "descrizione": "NEOLITH 850 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 228, "nuovocod": "1263401", "cod": "0868", "descrizione": "EBECRYL LEO 14301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 229, "nuovocod": "4734400", "cod": "0869", "descrizione": "NEOLITH 900 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 230, "nuovocod": "1263451", "cod": "0870", "descrizione": "EBECRYL LEO 14501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 231, "nuovocod": "4734410", "cod": "0871", "descrizione": "NEOLITH 950 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 232, "nuovocod": "1263501", "cod": "0872", "descrizione": "EBECRYL LEO 14701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 233, "nuovocod": "4734420", "cod": "0873", "descrizione": "NEOLITH 1000 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 234, "nuovocod": "1263551", "cod": "0874", "descrizione": "EBECRYL LEO 14901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 235, "nuovocod": "4734430", "cod": "0875", "descrizione": "NEOLITH 1050 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 236, "nuovocod": "1263601", "cod": "0876", "descrizione": "EBECRYL LEO 15101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 237, "nuovocod": "4734440", "cod": "0877", "descrizione": "NEOLITH 1100 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 238, "nuovocod": "1263651", "cod": "0878", "descrizione": "EBECRYL LEO 15301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 239, "nuovocod": "4734450", "cod": "0879", "descrizione": "NEOLITH 1150 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 240, "nuovocod": "1263701", "cod": "0880", "descrizione": "EBECRYL LEO 15501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 241, "nuovocod": "4734460", "cod": "0881", "descrizione": "NEOLITH 1200 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 242, "nuovocod": "1263751", "cod": "0882", "descrizione": "EBECRYL LEO 15701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 243, "nuovocod": "4734470", "cod": "0883", "descrizione": "NEOLITH 1250 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 244, "nuovocod": "1263801", "cod": "0884", "descrizione": "EBECRYL LEO 15901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 245, "nuovocod": "4734480", "cod": "0885", "descrizione": "NEOLITH 1300 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 246, "nuovocod": "1263851", "cod": "0886", "descrizione": "EBECRYL LEO 16101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 247, "nuovocod": "4734490", "cod": "0887", "descrizione": "NEOLITH 1350 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 248, "nuovocod": "1263901", "cod": "0888", "descrizione": "EBECRYL LEO 16301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 249, "nuovocod": "4734500", "cod": "0889", "descrizione": "NEOLITH 1400 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 250, "nuovocod": "1263951", "cod": "0890", "descrizione": "EBECRYL LEO 16501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 251, "nuovocod": "4734510", "cod": "0891", "descrizione": "NEOLITH 1450 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 252, "nuovocod": "1264001", "cod": "0892", "descrizione": "EBECRYL LEO 16701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 253, "nuovocod": "4734520", "cod": "0893", "descrizione": "NEOLITH 1500 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 254, "nuovocod": "1264051", "cod": "0894", "descrizione": "EBECRYL LEO 16901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 255, "nuovocod": "4734530", "cod": "0895", "descrizione": "NEOLITH 1550 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 256, "nuovocod": "1264101", "cod": "0896", "descrizione": "EBECRYL LEO 17101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 257, "nuovocod": "4734540", "cod": "0897", "descrizione": "NEOLITH 1600 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 258, "nuovocod": "1264151", "cod": "0898", "descrizione": "EBECRYL LEO 17301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 259, "nuovocod": "4734550", "cod": "0899", "descrizione": "NEOLITH 1650 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 260, "nuovocod": "1264201", "cod": "0900", "descrizione": "EBECRYL LEO 17501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 261, "nuovocod": "4734560", "cod": "0901", "descrizione": "NEOLITH 1700 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 262, "nuovocod": "1264251", "cod": "0902", "descrizione": "EBECRYL LEO 17701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 263, "nuovocod": "4734570", "cod": "0903", "descrizione": "NEOLITH 1750 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 264, "nuovocod": "1264301", "cod": "0904", "descrizione": "EBECRYL LEO 17901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 265, "nuovocod": "4734580", "cod": "0905", "descrizione": "NEOLITH 1800 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 266, "nuovocod": "1264351", "cod": "0906", "descrizione": "EBECRYL LEO 18101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 267, "nuovocod": "4734590", "cod": "0907", "descrizione": "NEOLITH 1850 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 268, "nuovocod": "1264401", "cod": "0908", "descrizione": "EBECRYL LEO 18301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 269, "nuovocod": "4734600", "cod": "0909", "descrizione": "NEOLITH 1900 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 270, "nuovocod": "1264451", "cod": "0910", "descrizione": "EBECRYL LEO 18501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 271, "nuovocod": "4734610", "cod": "0911", "descrizione": "NEOLITH 1950 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 272, "nuovocod": "1264501", "cod": "0912", "descrizione": "EBECRYL LEO 18701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 273, "nuovocod": "4734620", "cod": "0913", "descrizione": "NEOLITH 2000 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 274, "nuovocod": "1264551", "cod": "0914", "descrizione": "EBECRYL LEO 18901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 275, "nuovocod": "4734630", "cod": "0915", "descrizione": "NEOLITH 2100 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 276, "nuovocod": "1264601", "cod": "0916", "descrizione": "EBECRYL LEO 19101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 277, "nuovocod": "4734640", "cod": "0917", "descrizione": "NEOLITH 2200 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 278, "nuovocod": "1264651", "cod": "0918", "descrizione": "EBECRYL LEO 19301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 279, "nuovocod": "4734650", "cod": "0919", "descrizione": "NEOLITH 2300 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 280, "nuovocod": "1264701", "cod": "0920", "descrizione": "EBECRYL LEO 19501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 281, "nuovocod": "4734660", "cod": "0921", "descrizione": "NEOLITH 2400 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 282, "nuovocod": "1264751", "cod": "0922", "descrizione": "EBECRYL LEO 19701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 283, "nuovocod": "4734670", "cod": "0923", "descrizione": "NEOLITH 2500 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 284, "nuovocod": "1264801", "cod": "0924", "descrizione": "EBECRYL LEO 19901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 285, "nuovocod": "4734680", "cod": "0925", "descrizione": "NEOLITH 2600 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 286, "nuovocod": "1264851", "cod": "0926", "descrizione": "EBECRYL LEO 20101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 287, "nuovocod": "4734690", "cod": "0927", "descrizione": "NEOLITH 2700 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 288, "nuovocod": "1264901", "cod": "0928", "descrizione": "EBECRYL LEO 20301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 289, "nuovocod": "4734700", "cod": "0929", "descrizione": "NEOLITH 2800 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 290, "nuovocod": "1264951", "cod": "0930", "descrizione": "EBECRYL LEO 20501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 291, "nuovocod": "4734710", "cod": "0931", "descrizione": "NEOLITH 2900 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 292, "nuovocod": "1265001", "cod": "0932", "descrizione": "EBECRYL LEO 20701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 293, "nuovocod": "4734720", "cod": "0933", "descrizione": "NEOLITH 3000 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 294, "nuovocod": "1265051", "cod": "0934", "descrizione": "EBECRYL LEO 20901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 295, "nuovocod": "4734730", "cod": "0935", "descrizione": "NEOLITH 3100 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 296, "nuovocod": "1265101", "cod": "0936", "descrizione": "EBECRYL LEO 21101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 297, "nuovocod": "4734740", "cod": "0937", "descrizione": "NEOLITH 3200 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 298, "nuovocod": "1265151", "cod": "0938", "descrizione": "EBECRYL LEO 21301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 299, "nuovocod": "4734750", "cod": "0939", "descrizione": "NEOLITH 3300 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 300, "nuovocod": "1265201", "cod": "0940", "descrizione": "EBECRYL LEO 21501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 301, "nuovocod": "4734760", "cod": "0941", "descrizione": "NEOLITH 3400 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 302, "nuovocod": "1265251", "cod": "0942", "descrizione": "EBECRYL LEO 21701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 303, "nuovocod": "4734770", "cod": "0943", "descrizione": "NEOLITH 3500 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 304, "nuovocod": "1265301", "cod": "0944", "descrizione": "EBECRYL LEO 21901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 305, "nuovocod": "4734780", "cod": "0945", "descrizione": "NEOLITH 3600 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 306, "nuovocod": "1265351", "cod": "0946", "descrizione": "EBECRYL LEO 22101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 307, "nuovocod": "4734790", "cod": "0947", "descrizione": "NEOLITH 3700 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 308, "nuovocod": "1265401", "cod": "0948", "descrizione": "EBECRYL LEO 22301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 309, "nuovocod": "4734800", "cod": "0949", "descrizione": "NEOLITH 3800 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 310, "nuovocod": "1265451", "cod": "0950", "descrizione": "EBECRYL LEO 22501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 311, "nuovocod": "4734810", "cod": "0951", "descrizione": "NEOLITH 3900 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 312, "nuovocod": "1265501", "cod": "0952", "descrizione": "EBECRYL LEO 22701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 313, "nuovocod": "4734820", "cod": "0953", "descrizione": "NEOLITH 4000 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 314, "nuovocod": "1265551", "cod": "0954", "descrizione": "EBECRYL LEO 22901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 315, "nuovocod": "4734830", "cod": "0955", "descrizione": "NEOLITH 4100 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 316, "nuovocod": "1265601", "cod": "0956", "descrizione": "EBECRYL LEO 23101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 317, "nuovocod": "4734840", "cod": "0957", "descrizione": "NEOLITH 4200 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 318, "nuovocod": "1265651", "cod": "0958", "descrizione": "EBECRYL LEO 23301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 319, "nuovocod": "4734850", "cod": "0959", "descrizione": "NEOLITH 4300 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 320, "nuovocod": "1265701", "cod": "0960", "descrizione": "EBECRYL LEO 23501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 321, "nuovocod": "4734860", "cod": "0961", "descrizione": "NEOLITH 4400 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 322, "nuovocod": "1265751", "cod": "0962", "descrizione": "EBECRYL LEO 23701", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 323, "nuovocod": "4734870", "cod": "0963", "descrizione": "NEOLITH 4500 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 324, "nuovocod": "1265801", "cod": "0964", "descrizione": "EBECRYL LEO 23901", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 325, "nuovocod": "4734880", "cod": "0965", "descrizione": "NEOLITH 4600 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 326, "nuovocod": "1265851", "cod": "0966", "descrizione": "EBECRYL LEO 24101", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 327, "nuovocod": "4734890", "cod": "0967", "descrizione": "NEOLITH 4700 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 328, "nuovocod": "1265901", "cod": "0968", "descrizione": "EBECRYL LEO 24301", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 329, "nuovocod": "4734900", "cod": "0969", "descrizione": "NEOLITH 4800 F", "reparto": "REP 61", "zona": "F6", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" },
+      { "id": 330, "nuovocod": "1265951", "cod": "0970", "descrizione": "EBECRYL LEO 24501", "reparto": "REP 68", "zona": "", "spezzoni": [], "imballo": "FUSTO", "tipologia": "Resina" }
+    ];
+
+    let database = parte1.concat(parte2, parte3);
+    let searchHistory = [database[0], database[1], database[2]];
+
+    function switchTab(tabId, btnElement) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+
+      document.getElementById(`tab-${tabId}`).classList.add('active');
+      btnElement.classList.add('active');
+
+      if (tabId === 'reparti') {
+        renderReparti();
+      }
+    }
+
+    function renderHistory() {
+      const container = document.getElementById('historyContainer');
+      container.innerHTML = '';
+      if (searchHistory.length === 0) {
+        container.innerHTML = '<div style="color: #6b7280; font-size: 0.9rem;">Nessuna cronologia recente.</div>';
+        return;
+      }
+      searchHistory.forEach(item => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `<span>${item.descrizione}</span> <span style="font-size: 0.8rem; color: #2563eb;">${item.nuovocod || ''}</span>`;
+        div.onclick = () => {
+          const searchInput = document.getElementById('searchInput');
+          searchInput.value = item.descrizione;
+          document.getElementById('inventoryClearBtn').style.display = 'block';
+          switchTab('inventario', document.querySelectorAll('.nav-item')[1]);
+          filterData();
+        };
+        container.appendChild(div);
+      });
+    }
+
+    function addToHistory(item) {
+      searchHistory = searchHistory.filter(i => i.id !== item.id);
+      searchHistory.unshift(item);
+      if (searchHistory.length > 5) searchHistory.pop();
+      renderHistory();
+    }
+
+    function handleHomeSearch(e) {
+      const query = e.target.value.toLowerCase().trim();
+      const clearBtn = document.getElementById('homeClearBtn');
+      
+      if (query.length > 0) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+
+      if (query.length > 1) {
+        const found = database.find(i => (i.descrizione && i.descrizione.toLowerCase().includes(query)) || (i.nuovocod && i.nuovocod.includes(query)));
+        if (found) {
+          addToHistory(found);
+        }
+      }
+    }
+
+    function renderReparti() {
+      const container = document.getElementById('repartiContainer');
+      container.innerHTML = '';
+
+      const repartiSet = new Set();
+      database.forEach(item => {
+        if (item.reparto) repartiSet.add(item.reparto);
+        if (item.spezzoni && item.spezzoni.length > 0) {
+          item.spezzoni.forEach(sp => repartiSet.add(sp));
+        }
+      });
+
+      const repartiList = Array.from(repartiSet).sort();
+
+      if (repartiList.length === 0) {
+        container.innerHTML = '<div class="no-results">Nessun reparto trovato.</div>';
+        return;
+      }
+
+      repartiList.forEach(rep => {
+        const card = document.createElement('div');
+        card.className = 'reparto-card';
+        
+        const countStock = database.filter(i => i.reparto && i.reparto.toLowerCase().includes(rep.toLowerCase())).length;
+        const countSpezzoni = database.filter(i => i.spezzoni && i.spezzoni.some(s => s.toLowerCase().includes(rep.toLowerCase()))).length;
+
+        card.innerHTML = `
+          <span>${rep}</span>
+          <span style="font-size: 0.85rem; color: #4b5563; background: #f3f4f6; padding: 4px 8px; border-radius: 6px;">
+            Stock: ${countStock} | Spezzoni: ${countSpezzoni}
+          </span>
+        `;
+        card.onclick = () => {
+          const searchInput = document.getElementById('searchInput');
+          searchInput.value = rep;
+          document.getElementById('inventoryClearBtn').style.display = 'block';
+          switchTab('inventario', document.querySelectorAll('.nav-item')[1]);
+          filterData();
+        };
+        container.appendChild(card);
+      });
+    }
+
+    function renderCards(data) {
+      const container = document.getElementById('cardContainer');
+      const counter = document.getElementById('counter');
+      
+      container.innerHTML = '';
+      counter.textContent = `Mostrati: ${data.length} di ${database.length} elementi`;
+
+      if (data.length === 0) {
+        container.innerHTML = '<div class="no-results">Nessun elemento trovato.</div>';
+        return;
+      }
+
+      data.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.id = `card-${item.id}`;
+        
+        const tipologiaBadge = item.tipologia ? `<span class="badge-tag" id="badge-view-${item.id}">${item.tipologia}</span>` : `<span class="badge-tag" id="badge-view-${item.id}" style="display:none;"></span>`;
+        const imballoBadge = item.imballo ? `<span class="badge-tag" id="imballo-view-${item.id}">${item.imballo}</span>` : `<span class="badge-tag" id="imballo-view-${item.id}" style="display:none;"></span>`;
+        
+        const repartoZona = (item.reparto && item.zona) ? `${item.reparto} - ${item.zona}` : (item.reparto || item.zona || '');
+        const spezzoniHtml = (item.spezzoni && item.spezzoni.length > 0) ? item.spezzoni.join(', ') : '-';
+
+        card.innerHTML = `
+          <div class="card-header-row">
+            <div class="card-title-container" style="flex: 1;">
+              <span id="view-descrizione-${item.id}" style="font-size: 1.35rem; font-weight: 700; color: #111827; line-height: 1.3; display: block;">${item.descrizione}</span>
+              <input type="text" id="edit-descrizione-${item.id}" class="edit-input" value="${item.descrizione}" style="display:none; font-size: 1.2rem; font-weight: 700;">
+            </div>
+            <div class="card-actions">
+              <button class="btn-icon" onclick="enableInlineEdit(${item.id})" title="Modifica">
+                <svg viewBox="0 0 24 24"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>
+              </button>
+              <button class="btn-icon btn-delete" onclick="deleteItem(${item.id})" title="Elimina">
+                <svg viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+              </button>
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <div class="col-left">
+              <div class="info-group">
+                <span class="label">Codice Sherwin</span>
+                <span class="code-value" id="view-nuovocod-${item.id}">${item.nuovocod || '-'}</span>
+                <input type="text" id="edit-nuovocod-${item.id}" class="edit-input code-input" value="${item.nuovocod || ''}" style="display:none;">
+              </div>
+              <div class="info-group">
+                <span class="label">Codice Interno</span>
+                <span class="code-value" id="view-cod-${item.id}">${item.cod || '-'}</span>
+                <input type="text" id="edit-cod-${item.id}" class="edit-input code-input" value="${item.cod || ''}" style="display:none;">
+              </div>
+              
+              <div class="bottom-left-badges">
+                ${tipologiaBadge}
+                ${imballoBadge}
+              </div>
+              <input type="text" id="edit-tipologia-${item.id}" class="edit-input" value="${item.tipologia || ''}" placeholder="Tipologia" style="display:none; margin-top: 4px;">
+              <input type="text" id="edit-imballo-${item.id}" class="edit-input" value="${item.imballo || ''}" placeholder="Imballo" style="display:none; margin-top: 4px;">
+            </div>
+
+            <div class="col-right">
+              <div class="info-group">
+                <span class="label">Reparto / Zona</span>
+                <span class="reparto-value" id="view-reparto-${item.id}">${repartoZona || '-'}</span>
+                <input type="text" id="edit-reparto-${item.id}" class="edit-input reparto-input" value="${repartoZona}" style="display:none;">
+              </div>
+              <div class="info-group">
+                <div class="label-row">
+                  <span class="label">Spezzoni</span>
+                  <button class="btn-add-spezzone" id="btn-add-sp-${item.id}" onclick="addSpezzoneInput(${item.id}, '')" style="display:none;" title="Aggiungi spezzone">+</button>
+                </div>
+                <span class="spezzoni-value" id="view-spezzoni-${item.id}">${spezzoniHtml}</span>
+                <div id="edit-spezzoni-container-${item.id}" style="display:none; display: flex; flex-direction: column; gap: 4px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="edit-footer" id="edit-footer-${item.id}">
+            <button class="btn-save-inline" onclick="saveInlineEdit(${item.id})">Salva</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function enableInlineEdit(id) {
+      const item = database.find(i => i.id === id);
+      const fields = ['descrizione', 'nuovocod', 'cod', 'reparto', 'tipologia', 'imballo'];
+      fields.forEach(field => {
+        const viewEl = document.getElementById(`${field === 'descrizione' || field === 'nuovocod' || field === 'cod' || field === 'reparto' ? 'view-' + field + '-' + id : field + '-view-' + id}`);
+        const editEl = document.getElementById(`edit-${field}-${id}`);
+        if (viewEl) viewEl.style.display = 'none';
+        if (editEl) editEl.style.display = 'block';
+      });
+
+      document.getElementById(`view-spezzoni-${id}`).style.display = 'none';
+      document.getElementById(`btn-add-sp-${id}`).style.display = 'inline-flex';
+      
+      const container = document.getElementById(`edit-spezzoni-container-${id}`);
+      container.style.display = 'flex';
+      container.innerHTML = '';
+
+      if (item.spezzoni && item.spezzoni.length > 0) {
+        item.spezzoni.forEach(sp => addSpezzoneInput(id, sp));
+      } else {
+        addSpezzoneInput(id, '');
+      }
+
+      const footer = document.getElementById(`edit-footer-${id}`);
+      if (footer) footer.classList.add('active');
+    }
+
+    function addSpezzoneInput(id, value) {
+      const container = document.getElementById(`edit-spezzoni-container-${id}`);
+      const wrapper = document.createElement('div');
+      wrapper.style.display = 'flex';
+      wrapper.style.gap = '4px';
+
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'edit-input spezzone-input';
+      input.value = value;
+      input.placeholder = 'Es. Rep 61';
+
+      const btnDel = document.createElement('button');
+      btnDel.type = 'button';
+      btnDel.textContent = '✕';
+      btnDel.style.background = '#fee2e2';
+      btnDel.style.color = '#dc2626';
+      btnDel.style.border = 'none';
+      btnDel.style.borderRadius = '6px';
+      btnDel.style.padding = '0 8px';
+      btnDel.style.cursor = 'pointer';
+      btnDel.onclick = () => wrapper.remove();
+
+      wrapper.appendChild(input);
+      wrapper.appendChild(btnDel);
+      container.appendChild(wrapper);
+    }
+
+    function saveInlineEdit(id) {
+      const item = database.find(i => i.id === id);
+      if (!item) return;
+
+      item.descrizione = document.getElementById(`edit-descrizione-${id}`).value;
+      item.nuovocod = document.getElementById(`edit-nuovocod-${id}`).value;
+      item.cod = document.getElementById(`edit-cod-${id}`).value;
+      
+      const repVal = document.getElementById(`edit-reparto-${id}`).value;
+      item.reparto = repVal;
+      item.zona = ''; 
+
+      item.tipologia = document.getElementById(`edit-tipologia-${id}`).value;
+      item.imballo = document.getElementById(`edit-imballo-${id}`).value;
+
+      const container = document.getElementById(`edit-spezzoni-container-${id}`);
+      const inputs = container.querySelectorAll('.spezzone-input');
+      item.spezzoni = Array.from(inputs).map(inp => inp.value.trim()).filter(val => val !== '');
+
+      addToHistory(item);
+      filterData();
+    }
+
+    function deleteItem(id) {
+      if (confirm("Vuoi davvero eliminare questa scheda?")) {
+        database = database.filter(item => item.id !== id);
+        searchHistory = searchHistory.filter(item => item.id !== id);
+        renderHistory();
+        filterData();
+      }
+    }
+
+    function filterData() {
+      const searchInput = document.getElementById('searchInput');
+      const clearBtn = document.getElementById('inventoryClearBtn');
+      const query = searchInput.value.toLowerCase().trim();
+      
+      if (query.length > 0) {
+        clearBtn.style.display = 'block';
+      } else {
+        clearBtn.style.display = 'none';
+      }
+
+      if (!query) {
+        renderCards(database);
+        return;
+      }
+
+      const filtered = database.filter(item => {
+        const spezzoniStr = item.spezzoni ? item.spezzoni.join(' ').toLowerCase() : '';
+        return (item.descrizione && item.descrizione.toLowerCase().includes(query)) ||
+               (item.nuovocod && item.nuovocod.toLowerCase().includes(query)) ||
+               (item.cod && item.cod.toLowerCase().includes(query)) ||
+               (item.reparto && item.reparto.toLowerCase().includes(query)) ||
+               (item.zona && item.zona.toLowerCase().includes(query)) ||
+               (spezzoniStr.includes(query)) ||
+               (item.tipologia && item.tipologia.toLowerCase().includes(query)) ||
+               (item.imballo && item.imballo.toLowerCase().includes(query));
+      });
+
+      if (filtered.length === 1) {
+        addToHistory(filtered[0]);
+      }
+
+      renderCards(filtered);
+    }
+
+    document.getElementById('homeClearBtn').addEventListener('click', function() {
+      const input = document.getElementById('homeSearchInput');
+      input.value = '';
+      this.style.display = 'none';
+      input.focus();
+    });
+
+    document.getElementById('inventoryClearBtn').addEventListener('click', function() {
+      const input = document.getElementById('searchInput');
+      input.value = '';
+      this.style.display = 'none';
+      input.focus();
+      filterData();
+    });
+
+    renderCards(database);
+    renderHistory();
+  </script>
+</body>
+</html>
